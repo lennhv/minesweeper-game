@@ -26,7 +26,7 @@ class MinesweeperTest(TestCase):
         board = ins.create_game_board(mines=1)
         self.assertEqual(board, _board)
 
-    def test_corners_mine(self):
+    def test_corners_mines(self):
         mines = ((0, 0), (0, 8), (8, 0), (8, 8))
         _board = [["M", 1, 0, 0, 0, 0, 0, 1, "M"],
                   [1, 1, 0, 0, 0, 0, 0, 1, 1],
@@ -43,7 +43,7 @@ class MinesweeperTest(TestCase):
         board = ins.create_game_board(mines=4)
         self.assertEqual(board, _board)
 
-    def test_adjacent_mine(self):
+    def test_adjacents_mines(self):
         mines = ((1, 1), (2, 2), (3, 2), (5, 5))
         _board = [[1, 1, 1, 0, 0, 0, 0, 0, 0],
                   [1, "M", 2, 1, 0, 0, 0, 0, 0],
