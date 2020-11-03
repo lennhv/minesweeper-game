@@ -10,20 +10,25 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 
+import os
+import environ
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
+env = environ.Env()
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '$5ko)bqz04l%c7_8$td=!ush6$qba_nr)nsdo3n5bd@45_a_pr'
-
+SECRET_KEY = env.get_value('SECRET_KEY')
+if not SECRET_KEY:
+    raise ValueError("SECRET_KEY is needed")
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG =  env.bool('DEBUG', default=False)
 
 ALLOWED_HOSTS = []
 
@@ -37,6 +42,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'drf_yasg',
+    'users',
+    'games'
 ]
 
 MIDDLEWARE = [
@@ -73,12 +82,22 @@ WSGI_APPLICATION = 'conf.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': env.str("DB_NAME"),
+        'USER': env.str("DB_USER"),
+        'PASSWORD': env.str("DB_PASSWORD"),
+        'HOST': env.str("DB_HOST", default='localhost'),
+        'PORT': env.str("DB_PORT", default=''),
     }
 }
+
+
+# Users
+
+AUTH_USER_MODEL = 'users.User'
 
 
 # Password validation
@@ -118,3 +137,60 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
 STATIC_URL = '/static/'
+
+STATICFILES_DIR = [
+    os.path.join(BASE_DIR, "static")
+]
+
+
+# rest framework
+# https://www.django-rest-framework.org/
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+    'DEFAULT_THROTTLE_CLASES': (
+        'rest_framework.throttling.UserRateThrottle',
+        'rest_framework.throttling.AnonRateThrottle',
+    ),
+    # 'DEFAULT_THROTTLE_RATES': {
+    #     'user': '60/minute',
+    #     'anon': '10/minute',
+    # },
+}
+
+
+# logging
+# https://docs.djangoproject.com/en/3.1/topics/logging/
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{asctime} {levelname} {module} {process:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '%(levelname)s %(message)s',
+        },
+    },
+    'handlers' : {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose'
+        },
+    },
+    'loggers': {
+        # 'django.db.backends': {
+        #     'level': 'DEBUG',
+        #     'handlers': ['console'],
+        # }
+        'rest_framework': {
+            'level': 'DEBUG',
+            'handlers': ['console'],
+        }
+    }
+}
