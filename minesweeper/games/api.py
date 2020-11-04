@@ -5,7 +5,10 @@ from rest_framework.generics import (RetrieveUpdateAPIView,
 
 from .models import MinesweeperGame
 
-from .serializers import MinesweeperGameSerializer, MinesweeperGameUpdateSerializer, FlagSquareBoarSerializer
+from .serializers import (
+    MinesweeperGameSerializer,
+    MinesweeperGameUpdateSerializer,
+    FlagSquareBoarSerializer)
 
 
 class ListMinesweperApiView(ListCreateAPIView):
