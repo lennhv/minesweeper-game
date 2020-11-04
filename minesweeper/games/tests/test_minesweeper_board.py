@@ -25,7 +25,7 @@ class MinesweeperTest(TestCase):
         for row in _b:
             cols = []
             for c in row:
-                cols.append(Minesweeper._convert_to_cell(c))
+                cols.append(Minesweeper.convert_to_cell(c))
             _board.append(cols)
         ins = Minesweeper()
         ins.get_point = mock.Mock(return_value=(4, 4))
@@ -65,7 +65,7 @@ class MinesweeperTest(TestCase):
         self.assertEqual(board, _board)
 
     def test_adjacents_mines(self):
-        mines = ((1, 1), (2, 2), (3, 2), (5, 5))
+        mines = ((1, 1), (2, 2), (2, 3), (5, 5))
         # # board
         _b = [[1, 1, 1, 0, 0, 0, 0, 0, 0],
               [1, "M", 2, 1, 0, 0, 0, 0, 0],
