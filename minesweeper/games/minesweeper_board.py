@@ -23,8 +23,8 @@ class Minesweeper:
             NOTE: not take in account flagged and open properties
         """
         if cell == 'M':
-            return '0100'
-        return str(cell) + '000'
+            return '0010'
+        return '000' + str(cell)
 
     @staticmethod
     def display_board(board):
@@ -106,7 +106,8 @@ class Minesweeper:
                 1 -> true
 
         """
-        print(columns, rows, mines)
+        # print(columns, rows, mines)
+        log.debug("cols: %s rows: %s mines: %s", columns, rows, mines)
         # create `zeroised` board
         board = [['0000' for i in range(columns)] for i in range(rows)]
         # mines setup
