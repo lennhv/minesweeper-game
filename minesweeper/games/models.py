@@ -29,7 +29,7 @@ class MinesweeperGame(models.Model):
     id = models.UUIDField(
         primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    board = ArrayField(models.CharField(_('board'), max_length=4))
+    board = models.TextField(_('board'))
     rows = models.SmallIntegerField(_('rows'))
     columns = models.SmallIntegerField(_('columns'))
     mines = models.SmallIntegerField(_('mines'))
