@@ -188,6 +188,10 @@ LOGGING = {
         #     'level': 'DEBUG',
         #     'handlers': ['console'],
         # }
+       'games': {
+            'level': 'DEBUG',
+            'handlers': ['console'],
+        },
         'rest_framework': {
             'level': 'DEBUG',
             'handlers': ['console'],
