@@ -26,55 +26,54 @@ class MinesweeperGameManager(models.Manager):
             finished and is user is owner
         """
         instance = kwargs["instance"]
-        if instance.finished == instance.STARTED:
+        if instance.status == instance.FINISHED:
             return instance
         # 
         board = json.loads(instance.board)
         lost = False
         flagged = kwargs["square"]
+        log.debug("flagged: %s", flagged)
         data = Minesweeper.property_to_numbers(board[flagged[1]][flagged[0]])
         data[0] = 1
         # update board
         board[flagged[1]][flagged[0]] = Minesweeper.numbers_to_property(data)
-        #
-        isinstance.board = json.dumps(board)
-        #
-        isinstance.save(using=self._db)
-        return instance.refresh_from_db()
+        instance.board = json.dumps(board)
+        instance.save(using=self._db)
+        return instance
 
     def update_game(self, **kwargs):
         """ Update game if is not 
             finished and is user is owner
         """
         instance = kwargs["instance"]
-        if instance.finished == instance.STARTED:
+        if instance.status == instance.FINISHED:
             return instance
         # 
+        # log.debug("instance.board %s", instance.board)
         board = json.loads(instance.board)
         lost = False
-        s_open = kwargs["open"]
-        for sq in s_open:
+        opens = kwargs["opens"]
+        for sq in opens:
             data = Minesweeper.property_to_numbers(board[sq[1]][sq[0]])
             data[1] = 1
             if data[2] == 1:
                 lost = True
             # update board
             board[sq[1]][sq[0]] = Minesweeper.numbers_to_property(data)
-        #
-        isinstance.board = json.dumps(board)
-        # 
+        instance.board = json.dumps(board)
         finish = False
         if lost:
-            isinstance.result = instance.LOST
             finish = True
+            instance.result = instance.LOST
         else:
             # validate if all not mine square are open
             # if so win and finish
             all_open = True
-            for row in board:
-                for column in row:
-                    data = Minesweeper.numbers_to_property(column)
-                    if data[1] == 1:  # open square
+            for i, row in enumerate(board):
+                for j, column in enumerate(row):
+                    data = Minesweeper.property_to_numbers(column)
+                    # open square or mine
+                    if data[1] == 1 or data[2] == 1:  
                         continue
                     all_open = False
                     break
@@ -82,10 +81,10 @@ class MinesweeperGameManager(models.Manager):
                     break
             if all_open:
                 finish = True
-                isinstance.result = instance.WIN
+                instance.result = instance.WIN
         if finish:
-            isinstance.status = instance.FINISHED
-            isinstance.finish_at = timezone.now()
+            instance.status = instance.FINISHED
+            instance.finish_at = timezone.now()
         #
-        isinstance.save(using=self._db)
-        return instance.refresh_from_db()
+        instance.save(using=self._db)
+        return instance
