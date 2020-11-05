@@ -150,14 +150,31 @@ class MinesweeeperListRetreiveApiTest(APITestCase):
 class MinesweeeperUpdateGameTest(APITestCase):
     """ update game """
 
+    def setup_board(self, board):
+        _board = []
+        for row in board:
+            cols = []
+            for c in row:
+                cols.append(Minesweeper.convert_to_cell(c))
+            _board.append(cols)
+        _game = MinesweeperGame.objects.create_game(**{
+            'user': self.user,
+            'rows': 9,
+            'columns': 9,
+            'mines': 4,
+        })
+        _game.board = json.dumps(_board)
+        _game.save()
+        return _game
+
     def setUp(self):
         username = 'testupdate'
         password = 'test1234*'
         self.user = User.objects.create_user('testupdate', password=password)
         self.client.login(username=username, password=password)
 
-    def test_pick_square(self):
-        """ pick square
+    def test_open_one_square(self):
+        """ open one square
         """
         mines = ((1, 1), (2, 2), (2, 3), (5, 5))
         # board
@@ -171,33 +188,35 @@ class MinesweeeperUpdateGameTest(APITestCase):
               [0, 0, 0, 0, 0, 0, 0, 0, 0],
               [0, 0, 0, 0, 0, 0, 0, 0, 0]
               ]
-        _board = []
-        for row in _b:
-            cols = []
-            for c in row:
-                cols.append(Minesweeper.convert_to_cell(c))
-            _board.append(cols)
-        _game = MinesweeperGame.objects.create_game(**{
-            'user': self.user,
-            'rows': 9,
-            'columns': 9,
-            'mines': 4,
-        })
-        _game.board = _board
-        _game.save()
-        opens = [4, 4]
+
+        _game = self.setup_board(_b)
+        # _board = []
+        # for row in _b:
+        #     cols = []
+        #     for c in row:
+        #         cols.append(Minesweeper.convert_to_cell(c))
+        #     _board.append(cols)
+        # _game = MinesweeperGame.objects.create_game(**{
+        #     'user': self.user,
+        #     'rows': 9,
+        #     'columns': 9,
+        #     'mines': 4,
+        # })
+        # _game.board = json.dumps(_board)
+        # _game.save()
+        opens = [[4, 4]]
         url = reverse('games:api-minesweeper-detail', args=(_game.id,))
         request = {
             "opens": opens
         }
-        response = self.client.put(url, request)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        _picked = MinesweeperGame.property_to_numbers(
+        response = self.client.put(url, request, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK,)
+        _picked = Minesweeper.property_to_numbers(
             response.data["board"][4][4])
         self.assertEqual(_picked[1], 1)
 
-    def test_pick_squares(self):
-        """ pick square
+    def test_open_many_squares(self):
+        """ open many squares, continue game
         """
         mines = ((1, 1), (2, 2), (2, 3), (5, 5))
         # board
@@ -211,40 +230,27 @@ class MinesweeeperUpdateGameTest(APITestCase):
               [0, 0, 0, 0, 0, 0, 0, 0, 0],
               [0, 0, 0, 0, 0, 0, 0, 0, 0]
               ]
-        _board = []
-        for row in _b:
-            cols = []
-            for c in row:
-                cols.append(Minesweeper.convert_to_cell(c))
-            _board.append(cols)
-        _game = MinesweeperGame.objects.create_game(**{
-            'user': self.user,
-            'rows': 9,
-            'columns': 9,
-            'mines': 4,
-        })
-        _game.board = _board
-        _game.save()
+        _game = self.setup_board(_b)
         opens = [[3, 5], [0, 5], [1, 5], [2, 5],
-                   [0, 6], [1, 6], [2, 6], [3, 6]]
+                 [0, 6], [1, 6], [2, 6], [3, 6]]
         url = reverse('games:api-minesweeper-detail', args=(_game.id,))
         request = {
             "opens": opens
         }
-        response = self.client.put(url, request)
+        response = self.client.put(url, request, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        _open = MinesweeperGame.property_to_numbers(
-            response.data["board"][4][4])
+        _open = Minesweeper.property_to_numbers(
+            response.data["board"][5][3])
         self.assertEqual(_open[1], 1)
-        _open = MinesweeperGame.property_to_numbers(
+        _open = Minesweeper.property_to_numbers(
             response.data["board"][6][1])
         self.assertEqual(_open[1], 1)
-        _open = MinesweeperGame.property_to_numbers(
+        _open = Minesweeper.property_to_numbers(
             response.data["board"][5][2])
         self.assertEqual(_open[1], 1)
 
-    def test_pick_mine(self):
-        """ pick mine
+    def test_open_mine_square(self):
+        """ open mine, the game is finished
         """
         mines = ((1, 1), (2, 2), (2, 3), (5, 5))
         # board
@@ -258,34 +264,154 @@ class MinesweeeperUpdateGameTest(APITestCase):
               [0, 0, 0, 0, 0, 0, 0, 0, 0],
               [0, 0, 0, 0, 0, 0, 0, 0, 0]
               ]
-        _board = []
-        for row in _b:
-            cols = []
-            for c in row:
-                cols.append(Minesweeper.convert_to_cell(c))
-            _board.append(cols)
-        _game = MinesweeperGame.objects.create_game(**{
-            'user': self.user,
-            'rows': 9,
-            'columns': 9,
-            'mines': 4,
-        })
-        _game.board = _board
-        _game.save()
+        _game = self.setup_board(_b)
         opens = [[5, 5]]
-        is_mine = True
         url = reverse('games:api-minesweeper-detail', args=(_game.id,))
         request = {
             "opens": opens
         }
-        response = self.client.put(url, request)
+        response = self.client.put(url, request, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        _open = MinesweeperGame.property_to_numbers(
+        _open = Minesweeper.property_to_numbers(
             response.data["board"][5][5])
         self.assertEqual(_open[1], 1)
         game = MinesweeperGame.objects.get(pk=_game.id)
         self.assertEqual(game.status, game.FINISHED)
         self.assertEqual(game.result, game.LOST)
+
+    def test_win_game(self):
+        """ Open square and win game
+        """
+        mines = ((1, 1), (2, 2), (2, 3), (5, 5))
+        to_open = [6, 3]
+        # board
+        _b = [[1, 1, 1, 0, 0, 0, 0, 0, 0],
+              [1, "M", 2, 1, 0, 0, 0, 0, 0],
+              [1, 3, "M", 2, 0, 0, 0, 0, 0],
+              [0, 2, "M", 2, 0, 0, 0, 0, 0],
+              [0, 1, 1, 1, 1, 1, 1, 0, 0],
+              [0, 0, 0, 0, 1, "M", 1, 0, 0],
+              [0, 0, 0, 0, 1, 1, 1, 0, 0],
+              [0, 0, 0, 0, 0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0, 0, 0, 0, 0]
+              ]
+        _game = self.setup_board(_b)
+        _open = []
+        for i, b in enumerate(_b):
+            row = []
+            for j, cell in enumerate(b):
+                _cell = Minesweeper.convert_to_cell(cell)
+                if cell != 'M':
+                    _cell = Minesweeper.property_to_numbers(_cell)
+                    if [j, i] != to_open:
+                        _cell[1] = 1
+                    _cell = Minesweeper.numbers_to_property(_cell)
+                row.append(_cell)
+            _open.append(row)
+        _game.board = json.dumps(_open)
+        _game.save()
+        # Minesweeper.display_board(_open)
+        opens = [to_open]
+        url = reverse('games:api-minesweeper-detail', args=(_game.id,))
+        request = {
+            "opens": opens
+        }
+        response = self.client.put(url, request, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # Minesweeper.display_board(response.data["board"])
+        _open = Minesweeper.property_to_numbers(
+            response.data["board"][3][6])
+        self.assertEqual(_open[1], 1)
+        game = MinesweeperGame.objects.get(pk=_game.id)
+        self.assertEqual(game.status, game.FINISHED)
+        self.assertEqual(game.result, game.WIN)
+
+    def tearDown(self):
+        self.client.logout()
+
+
+class MinesweeeperFlagGameTest(APITestCase):
+    """ update game """
+
+    def setup_board(self, board):
+        _board = []
+        for row in board:
+            cols = []
+            for c in row:
+                cols.append(Minesweeper.convert_to_cell(c))
+            _board.append(cols)
+        _game = MinesweeperGame.objects.create_game(**{
+            'user': self.user,
+            'rows': 9,
+            'columns': 9,
+            'mines': 4,
+        })
+        _game.board = json.dumps(_board)
+        _game.save()
+        return _game
+
+    def setUp(self):
+        username = 'testupdate'
+        password = 'test1234*'
+        self.user = User.objects.create_user('testupdate', password=password)
+        self.client.login(username=username, password=password)
+
+    def test_flag_square(self):
+        """ flag mine square
+        """
+        mines = ((1, 1), (2, 2), (2, 3), (5, 5))
+        # board
+        _b = [[1, 1, 1, 0, 0, 0, 0, 0, 0],
+              [1, "M", 2, 1, 0, 0, 0, 0, 0],
+              [1, 3, "M", 2, 0, 0, 0, 0, 0],
+              [0, 2, "M", 2, 0, 0, 0, 0, 0],
+              [0, 1, 1, 1, 1, 1, 1, 0, 0],
+              [0, 0, 0, 0, 1, "M", 1, 0, 0],
+              [0, 0, 0, 0, 1, 1, 1, 0, 0],
+              [0, 0, 0, 0, 0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0, 0, 0, 0, 0]
+              ]
+        _game = self.setup_board(_b)
+        square = [6, 2]
+        url = reverse('games:api-minesweeper-flag', args=(_game.id,))
+        request = {
+            "square": square
+        }
+        response = self.client.put(url, request, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        _flagged = Minesweeper.property_to_numbers(
+            response.data["board"][2][6])
+        self.assertEqual(_flagged[0], 1)
+
+    def test_flag_mine_square(self):
+        """ flag mine square
+        """
+        mines = ((1, 1), (2, 2), (2, 3), (5, 5))
+        # board
+        _b = [[1, 1, 1, 0, 0, 0, 0, 0, 0],
+              [1, "M", 2, 1, 0, 0, 0, 0, 0],
+              [1, 3, "M", 2, 0, 0, 0, 0, 0],
+              [0, 2, "M", 2, 0, 0, 0, 0, 0],
+              [0, 1, 1, 1, 1, 1, 1, 0, 0],
+              [0, 0, 0, 0, 1, "M", 1, 0, 0],
+              [0, 0, 0, 0, 1, 1, 1, 0, 0],
+              [0, 0, 0, 0, 0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0, 0, 0, 0, 0]
+              ]
+        _game = self.setup_board(_b)
+        square = [5, 5]
+        url = reverse('games:api-minesweeper-flag', args=(_game.id,))
+        request = {
+            "square": square
+        }
+        response = self.client.put(url, request, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        _flagged = Minesweeper.property_to_numbers(
+            response.data["board"][5][5])
+        self.assertEqual(_flagged[0], 1)
+        game = MinesweeperGame.objects.get(pk=_game.id)
+        self.assertEqual(game.status, game.STARTED)
+        self.assertEqual(game.result, None)
 
     def tearDown(self):
         self.client.logout()
