@@ -30,24 +30,27 @@ class Minesweeper:
     def display_board(board):
         """ display a board with all properties
         """
+        log.debug("+"*60)
+        _board = [""]
         for row in board:
-            log.debug(" ".join(cell for cell in row))
-            log.debug("")
-            print(" ".join(cell for cell in row))
-            print("")
+            _board.append(" ".join(cell for cell in row))
+            _board.append("")
+        log.debug("%s", '\n'.join(_board))
+        log.debug("+"*60)
 
     @staticmethod
     def display_traslated_board(board):
         """ display a board in a simple way
          'M' for mines and number for counters
         """
+        log.debug("+"*60)
+        _board = [""]
         for row in board:
-            log.debug(" ".join(str(Minesweeper._traslate_cell(cell))
-                               for cell in row))
-            log.debug("")
-            print(" ".join(str(Minesweeper._traslate_cell(cell))
-                           for cell in row))
-            print("")
+            _board.append(" ".join(str(Minesweeper._traslate_cell(cell))
+                                for cell in row))
+            _board.append("")
+        log.debug("%s", '\n'.join(_board))
+        log.debug("+"*60)
 
     @staticmethod
     def property_to_numbers(s):
@@ -106,8 +109,8 @@ class Minesweeper:
                 1 -> true
 
         """
-        # print(columns, rows, mines)
-        log.debug("cols: %s rows: %s mines: %s", columns, rows, mines)
+        log.debug("create board cols: %s rows: %s mines: %s",
+                  columns, rows, mines)
         # create `zeroised` board
         board = [['0000' for i in range(columns)] for i in range(rows)]
         # mines setup
@@ -161,12 +164,11 @@ class Minesweeper:
 
 
 if __name__ == '__main__':
-    # logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.DEBUG)
     rows = random.randrange(9, 30)
     cols = random.randrange(9, 30)
     mines = random.randrange(9, 30)
     board = Minesweeper().\
         create_game_board(rows=rows, columns=cols, mines=mines)
     Minesweeper.display_board(board)
-    print("+"*30)
     Minesweeper.display_traslated_board(board)
