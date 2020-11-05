@@ -1,6 +1,5 @@
 import json
 from rest_framework import serializers
-from drf_yasg import openapi
 
 from .models import MinesweeperGame
 
@@ -50,6 +49,7 @@ class MinesweeperGameUpdateSerializer(serializers.ModelSerializer):
                             'start_at', 'status', 'result')
 
     def update(self, instance, validated_data):
+        validated_data["instance"] = instance
         return self.Meta.model.\
             objects.update_game(**validated_data)
 
